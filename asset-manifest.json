@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/jerichoBob.github.io/static/css/main.12eade88.css",
+    "main.js": "/jerichoBob.github.io/static/js/main.1666fec8.js",
+    "index.html": "/jerichoBob.github.io/index.html",
+    "main.12eade88.css.map": "/jerichoBob.github.io/static/css/main.12eade88.css.map",
+    "main.1666fec8.js.map": "/jerichoBob.github.io/static/js/main.1666fec8.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.12eade88.css",
+    "static/js/main.1666fec8.js"
+  ]
+}
