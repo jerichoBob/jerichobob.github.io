@@ -1,6 +1,6 @@
-# React + TypeScript + Vite
+# React + TypeScript
 
-This app wasbuilt using windsurf and cascade (wanted to see what the user flow was like)
+This app wasbuilt using windsurf and cascade (wanted to see what the user flow was like). Also trying to figure out how to use github pages with React.
 
 ## Setup
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
