@@ -1,5 +1,9 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
+import { FontLoader } from 'three/examples/jsm/loaders/FontLoader';
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+
 
 const CubeScene = () => {
   const mountRef = useRef<HTMLDivElement>(null);
@@ -15,18 +19,75 @@ const CubeScene = () => {
     renderer.setClearColor(0x000000);
     mountRef.current.appendChild(renderer.domElement);
 
-    // Create cube
-    const geometry = new THREE.BoxGeometry(2, 2, 2);
+    // Create icosahedron with detail parameter
+    const geometry = new THREE.IcosahedronGeometry(1.0, 1);
     const material = new THREE.MeshStandardMaterial({
       color: 0x888888,
       metalness: 0.9,
       roughness: 0.1,
     });
-    const cube = new THREE.Mesh(geometry, material);
-    cube.position.set(0, 0, 0);
-    scene.add(cube);
 
-    // Add three lights around the cube
+    // Create wireframe material
+    const wireframeMaterial = new THREE.LineBasicMaterial({ 
+      color: 0x000000,
+      linewidth: 1.0,
+      opacity: 0.25,
+      transparent: true
+    });
+
+    // Create hexagonal grid
+    const radius = 2.5; // Distance between shapes
+    const gridSize = 5; // Number of shapes along each axis
+    const shapes: THREE.Mesh[] = [];
+
+    for (let q = -gridSize; q <= gridSize; q++) {
+      for (let r = Math.max(-gridSize, -q-gridSize); r <= Math.min(gridSize, -q+gridSize); r++) {
+        // Convert hex coordinates to pixel coordinates
+        const x = radius * (Math.sqrt(3) * q + Math.sqrt(3)/2 * r);
+        const z = radius * (3/2 * r);
+        
+        // Create shape
+        const shape = new THREE.Mesh(geometry, material);
+        shape.position.set(x, 0, z);
+        scene.add(shape);
+
+        // Add wireframe
+        const wireframe = new THREE.WireframeGeometry(geometry);
+        const line = new THREE.LineSegments(wireframe, wireframeMaterial);
+        shape.add(line);
+
+        // Add to animation list
+        shapes.push(shape);
+      }
+    }
+
+    // Add text
+    const fontLoader = new FontLoader();
+    fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', (font) => {
+      const textGeometry = new TextGeometry('jerichobob.github.io', {
+        font: font,
+        size: 0.3,
+        height: 0.05,
+      });
+      const textMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0xffffff,
+        metalness: 0.5,
+        roughness: 0.2
+      });
+      const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+      
+      // Center the text
+      textGeometry.computeBoundingBox();
+      const textWidth = textGeometry.boundingBox!.max.x - textGeometry.boundingBox!.min.x;
+      
+      // Position text in front of camera
+      textMesh.position.set(-textWidth/2+4, -3.5, -10);
+      
+      // Add text to camera
+      camera.add(textMesh);
+    });
+
+    // Add three lights around the shape
     const light1 = new THREE.PointLight(0xffffff, 250);
     light1.position.set(4, 0, 0);
     scene.add(light1);
@@ -66,24 +127,30 @@ const CubeScene = () => {
     // Set initial camera position
     camera.position.set(0, 0, 8);
 
+    // const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    const camera_velocity = 0.04;
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.enableZoom = false;
     // Animation
-    let time = 0;
-    const radius = 8;
     const animate = () => {
       requestAnimationFrame(animate);
-      time += 0.001;
 
-      // Calculate new camera group position
-      const x = Math.sin(time * 0.5) * radius;
-      const z = Math.cos(time * 0.5) * radius;
-      const y = Math.sin(time * 0.5) * 3;
+      const time = Date.now() * 0.001;
+      const radius = 8;
+      const x = Math.cos(time * camera_velocity) * radius;
+      const z = Math.sin(time * camera_velocity) * radius;
+      const y = Math.sin(time * camera_velocity) * 3;
 
       camera.position.set(x, y, z);
       camera.lookAt(0, 0, 0);
 
-      // Rotate cube slowly
-      cube.rotation.x += 0.001;
-      cube.rotation.y += 0.001;
+      // Rotate all shapes slowly
+      shapes.forEach(shape => {
+        shape.rotation.x += 0.001;
+        shape.rotation.y += 0.001;
+      });
 
       renderer.render(scene, camera);
     };
